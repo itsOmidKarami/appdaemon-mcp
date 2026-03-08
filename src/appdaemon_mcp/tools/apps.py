@@ -7,6 +7,7 @@ Tools:
     ad_restart_app    — Restart a running app
     ad_enable_app     — Enable a disabled app
     ad_disable_app    — Disable a running app
+    ad_reload_apps    — Reload all AppDaemon apps from disk
 """
 
 import logging
@@ -70,3 +71,12 @@ async def ad_disable_app(
     """Disable a running AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
     return await client.call_service("admin", "app", "disable", app=app)
+
+
+async def ad_reload_apps(ctx: Context) -> dict[str, Any]:
+    """Reload all AppDaemon apps from disk.
+
+    This triggers a full reload of all app configurations and Python modules.
+    """
+    client = ctx.request_context.lifespan_context.client
+    return await client.call_service("admin", "app", "reload")
