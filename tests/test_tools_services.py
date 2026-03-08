@@ -25,7 +25,11 @@ async def test_ad_list_services(ctx):
 
 async def test_ad_call_service(ctx):
     await ad_call_service(
-        ctx, namespace="default", domain="light", service="turn_on", kwargs={"entity_id": "light.office"}
+        ctx,
+        namespace="default",
+        domain="light",
+        service="turn_on",
+        kwargs={"entity_id": "light.office"},
     )
     ctx.request_context.lifespan_context.client.call_service.assert_called_once_with(
         "default", "light", "turn_on", entity_id="light.office"

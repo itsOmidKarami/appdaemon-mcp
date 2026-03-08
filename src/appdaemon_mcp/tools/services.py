@@ -23,10 +23,16 @@ async def ad_list_services(ctx: Context) -> dict[str, Any]:
 
 async def ad_call_service(
     ctx: Context,
-    namespace: Annotated[str, Field(description="The AppDaemon namespace (e.g. 'default', 'admin')")],
+    namespace: Annotated[
+        str, Field(description="The AppDaemon namespace (e.g. 'default', 'admin')")
+    ],
     domain: Annotated[str, Field(description="The service domain (e.g. 'light', 'notify')")],
-    service: Annotated[str, Field(description="The service name (e.g. 'turn_on', 'send_notification')")],
-    kwargs: Annotated[dict[str, Any] | None, Field(description="Optional service parameters")] = None,
+    service: Annotated[
+        str, Field(description="The service name (e.g. 'turn_on', 'send_notification')")
+    ],
+    kwargs: Annotated[
+        dict[str, Any] | None, Field(description="Optional service parameters")
+    ] = None,
 ) -> dict[str, Any]:
     """Call an AppDaemon service."""
     client = ctx.request_context.lifespan_context.client
