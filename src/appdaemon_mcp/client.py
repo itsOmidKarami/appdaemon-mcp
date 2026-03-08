@@ -4,6 +4,12 @@ import logging
 from typing import Any
 
 import aiohttp
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from .models import AppEntity, AppInfo, LogEntry
 
@@ -20,6 +26,10 @@ class ADAuthError(AppDaemonError):
 
 class ADConnectionError(AppDaemonError):
     """Raised when the client cannot connect to AppDaemon."""
+
+
+class ADServerError(AppDaemonError):
+    """Raised when AppDaemon returns a 5xx error."""
 
 
 class ADNotFoundError(AppDaemonError):
@@ -78,6 +88,24 @@ class AppDaemonClient:
     def _url(self, path: str) -> str:
         return f"{self.base_url}/{path.lstrip('/')}"
 
+    @retry(
+        retry=retry_if_exception_type(
+            (
+                aiohttp.ClientConnectorError,
+                aiohttp.ServerDisconnectedError,
+                aiohttp.ClientOSError,
+                ADServerError,
+            )
+        ),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        stop=stop_after_attempt(3),
+        before_sleep=lambda retry_state: logger.warning(
+            "Retrying AppDaemon request (attempt %s) after error: %s",
+            retry_state.attempt_number,
+            retry_state.outcome.exception(),
+        ),
+        reraise=True,
+    )
     async def _request(
         self,
         method: str,
@@ -91,8 +119,8 @@ class AppDaemonClient:
         Raises:
             ADAuthError: If 401 or 403 is returned.
             ADNotFoundError: If 404 is returned.
-            AppDaemonError: If other 4xx or 5xx status is returned.
-            ADConnectionError: If a connection error occurs.
+            AppDaemonError: If other 4xx status is returned.
+            ADConnectionError: If a connection error occurs or 5xx after retries.
             RuntimeError: If the client session has not been opened yet.
         """
         if self._session is None or self._session.closed:
@@ -109,14 +137,18 @@ class AppDaemonClient:
                 if resp.status == 404:
                     text = await resp.text()
                     raise ADNotFoundError(f"Resource not found: {path}")
+                if resp.status >= 500:
+                    text = await resp.text()
+                    raise ADServerError(f"AppDaemon Server Error {resp.status}: {text}")
                 if resp.status >= 400:
                     text = await resp.text()
                     raise AppDaemonError(
                         f"AppDaemon API error {resp.status} for {method} {url}: {text}"
                     )
                 data = await resp.json(content_type=None)
-        except aiohttp.ClientConnectorError as exc:
-            raise ADConnectionError(f"Could not connect to AppDaemon at {url}") from exc
+        except (aiohttp.ClientConnectorError, aiohttp.ClientOSError) as exc:
+            # Re-raise ADConnectionError if tenacity is exhausted, but tenacity will re-raise the last exception if reraise=True
+            raise exc
 
         # AppDaemon typically wraps responses in {"data": ...} or {"state": ...} or {"logs": ...}
         if isinstance(data, dict):
