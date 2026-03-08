@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "appdaemon": {
+      "command": "uvx",
+      "args": [
+        "appdaemon-mcp"
+      ],
+      "env": {
+        "AD_URL": "http://192.168.1.20:5050",
+        "AD_API_KEY": "your_api_password"
+      }
+    }
+  }
+}
