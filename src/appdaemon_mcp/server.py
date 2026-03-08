@@ -76,12 +76,15 @@ mcp.tool(name="ad_get_logs")(core.ad_get_logs)
 
 # Register App Management Tools
 mcp.tool(name="ad_list_apps")(apps.ad_list_apps)
+mcp.tool(name="ad_get_app_info")(apps.ad_get_app_info)
 mcp.tool(name="ad_start_app")(apps.ad_start_app)
 mcp.tool(name="ad_stop_app")(apps.ad_stop_app)
 mcp.tool(name="ad_restart_app")(apps.ad_restart_app)
 mcp.tool(name="ad_enable_app")(apps.ad_enable_app)
 mcp.tool(name="ad_disable_app")(apps.ad_disable_app)
 mcp.tool(name="ad_reload_apps")(apps.ad_reload_apps)
+mcp.tool(name="ad_create_app")(apps.ad_create_app)
+mcp.tool(name="ad_remove_app")(apps.ad_remove_app)
 
 
 # ---------------------------------------------------------------------------
