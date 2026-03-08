@@ -79,6 +79,8 @@ mcp.tool(name="ad_list_apps")(apps.ad_list_apps)
 mcp.tool(name="ad_start_app")(apps.ad_start_app)
 mcp.tool(name="ad_stop_app")(apps.ad_stop_app)
 mcp.tool(name="ad_restart_app")(apps.ad_restart_app)
+mcp.tool(name="ad_enable_app")(apps.ad_enable_app)
+mcp.tool(name="ad_disable_app")(apps.ad_disable_app)
 
 
 # ---------------------------------------------------------------------------

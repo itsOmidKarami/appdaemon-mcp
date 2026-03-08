@@ -5,6 +5,8 @@ Tools:
     ad_start_app      — Start a stopped app
     ad_stop_app       — Stop a running app
     ad_restart_app    — Restart a running app
+    ad_enable_app     — Enable a disabled app
+    ad_disable_app    — Disable a running app
 """
 
 import logging
@@ -50,3 +52,21 @@ async def ad_restart_app(
     """Restart an AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
     return await client.call_service("admin", "app", "restart", app=app)
+
+
+async def ad_enable_app(
+    ctx: Context,
+    app: Annotated[str, Field(description="The name of the app to enable")]
+) -> dict[str, Any]:
+    """Enable a disabled AppDaemon app."""
+    client = ctx.request_context.lifespan_context.client
+    return await client.call_service("admin", "app", "enable", app=app)
+
+
+async def ad_disable_app(
+    ctx: Context,
+    app: Annotated[str, Field(description="The name of the app to disable")]
+) -> dict[str, Any]:
+    """Disable a running AppDaemon app."""
+    client = ctx.request_context.lifespan_context.client
+    return await client.call_service("admin", "app", "disable", app=app)
