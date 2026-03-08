@@ -46,7 +46,7 @@ async def lifespan(server: FastMCP) -> AsyncGenerator[LifespanContext, None]:
     url = os.environ.get("AD_URL")
     if not url:
         logger.error("AD_URL environment variable is not set")
-        sys.exit(1)
+        raise RuntimeError("AD_URL environment variable is not set")
 
     key = os.environ.get("AD_API_KEY")
     client = AppDaemonClient(base_url=url, api_key=key)
