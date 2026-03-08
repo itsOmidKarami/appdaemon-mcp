@@ -104,9 +104,22 @@ async def test_get_logs_returns_list(client: AppDaemonClient):
 
 async def test_http_error_raises_appdaemon_error(client: AppDaemonClient):
     with aioresponses() as m:
-        m.get(f"{BASE_URL}/api/appdaemon", status=500, body="Error")
+        # PSR will retry 3 times, so we need the mock to repeat
+        m.get(f"{BASE_URL}/api/appdaemon", status=500, body="Error", repeat=True)
         with pytest.raises(AppDaemonError, match="500"):
             await client.get_info()
+
+
+async def test_retry_success_after_failure(client: AppDaemonClient):
+    with aioresponses() as m:
+        # First call fails, second succeeds
+        m.get(f"{BASE_URL}/api/appdaemon", status=503)
+        m.get(
+            f"{BASE_URL}/api/appdaemon",
+            payload={"data": {"version": "4.4.2", "timezone": "UTC"}},
+        )
+        result = await client.get_info()
+    assert result.version == "4.4.2"
 
 
 async def test_call_service(client: AppDaemonClient):

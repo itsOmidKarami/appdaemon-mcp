@@ -1,36 +1,57 @@
 # AppDaemon MCP Server
 
-An [MCP](https://modelcontextprotocol.io/) server that wraps the [AppDaemon](https://appdaemon.readthedocs.io/) REST API, letting AI assistants (Claude, Cursor, etc.) observe and manage AppDaemon home-automation apps.
+[![PyPI version](https://img.shields.io/pypi/v/appdaemon-mcp.svg)](https://pypi.org/project/appdaemon-mcp/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/yourusername/appdaemon-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/appdaemon-mcp/actions)
 
+An [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that wraps the [AppDaemon](https://appdaemon.readthedocs.io/) REST API. This allows AI assistants (like Claude, Cursor, and ChatGPT) to observe, manage, and develop AppDaemon home automation apps programmatically.
+
+```mermaid
+graph LR
+    AI[AI Client] -- MCP Protocol --> MCP[appdaemon-mcp]
+    MCP -- REST API --> AD[AppDaemon]
 ```
-AI Client ──MCP protocol──▶ appdaemon-mcp ──REST API──▶ AppDaemon
+
+## Features
+
+- **App Management**: List, start, stop, restart, enable, disable, create, and remove apps.
+- **State Observation**: Retrieve states for entire namespaces or specific entities.
+- **Service & Events**: Call any AppDaemon service or fire custom events.
+- **Logging**: Access live AppDaemon logs for real-time debugging.
+- **Modern Stack**: Built with Python 3.10+, `uv`, and `FastMCP`.
+
+## Prerequisites
+
+- **Python 3.10+**
+- **AppDaemon**: A running instance with the [HTTP component enabled](https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html#http).
+
+## Quick Start (No Installation Required)
+
+You can run the server directly using `uvx` (part of the [uv](https://github.com/astral-sh/uv) package manager):
+
+```bash
+export AD_URL="http://192.168.1.20:5050"
+export AD_API_KEY="your_api_password"
+uvx appdaemon-mcp
 ```
-
----
-
-## Requirements
-
-- Python 3.10+
-- [`uv`](https://github.com/astral-sh/uv) (recommended) or `pip`
-- A running AppDaemon instance with the HTTP component enabled
-
----
 
 ## Installation
 
-```bash
-# Clone / enter the project
-cd appdaemon-mcp
+### Using `uv` (Recommended)
 
-# Install with uv (creates a virtual env automatically)
-uv sync
+```bash
+uv tool install appdaemon-mcp
 ```
 
----
+### Using `pip`
+
+```bash
+pip install appdaemon-mcp
+```
 
 ## Configuration
 
-All configuration is done via environment variables:
+The server is configured entirely via environment variables:
 
 | Variable        | Required | Default | Description                                                |
 | --------------- | -------- | ------- | ---------------------------------------------------------- |
@@ -41,35 +62,18 @@ All configuration is done via environment variables:
 | `AD_VERIFY_SSL` | No       | `true`  | Set to `false` to skip SSL verification                    |
 | `MCP_TRANSPORT` | No       | `stdio` | `stdio` for IDE integrations, `streamable-http` for remote |
 
----
+## Client Configuration
 
-## Running
+### Claude Desktop
 
-### stdio (Claude Desktop / Cursor)
-
-```bash
-AD_URL=http://192.168.1.20:5050 AD_API_KEY=secret uv run appdaemon-mcp
-```
-
-### Development / MCP Inspector
-
-```bash
-AD_URL=http://192.168.1.20:5050 uv run mcp dev src/appdaemon_mcp/server.py
-# Then open http://localhost:5173
-```
-
----
-
-## Claude Desktop configuration
-
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Add this to your `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "appdaemon": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/appdaemon-mcp", "appdaemon-mcp"],
+      "command": "uvx",
+      "args": ["appdaemon-mcp"],
       "env": {
         "AD_URL": "http://192.168.1.20:5050",
         "AD_API_KEY": "your-secret"
@@ -79,37 +83,63 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
----
+### Cursor / VS Code (via IDE extension)
+
+Configure the MCP server with the following:
+- **Command**: `uvx appdaemon-mcp`
+- **Environment Variables**:
+  - `AD_URL`: Your AppDaemon URL
+  - `AD_API_KEY`: Your API password
+
+## Docker Usage
+
+The official image is available on GHCR:
+
+```bash
+docker run -e AD_URL="http://192.168.1.20:5050" ghcr.io/yourusername/appdaemon-mcp:latest
+```
 
 ## Available Tools
 
-| Tool            | Description                                         |
-| --------------- | --------------------------------------------------- |
-| `ad_get_info`   | AppDaemon version, timezone, and runtime info       |
-| `ad_list_apps`  | All apps with status (running / stopped / disabled) |
-| `ad_get_state`  | Entity state across an entire namespace             |
-| `ad_get_entity` | State of a single entity                            |
-| `ad_get_logs`   | Recent AppDaemon log entries                        |
+### Core & Observation
+- `ad_get_info`: Get AppDaemon system information (version, timezone, etc.).
+- `ad_get_state`: List states in a namespace.
+- `ad_get_entity`: Get state of a specific entity.
+- `ad_get_logs`: Retrieve recent AppDaemon log entries.
 
-More tools will be added (app management, service calls, dev tools).
+### App Management
+- `ad_list_apps`: List all registered apps and their current status.
+- `ad_get_app_info`: Get detailed configuration and status for a single app.
+- `ad_start_app` / `ad_stop_app`: Start or stop a specific app.
+- `ad_restart_app`: Restart an app.
+- `ad_enable_app` / `ad_disable_app`: Toggle whether an app is enabled.
+- `ad_reload_apps`: Instruct AppDaemon to reload apps from disk.
+- `ad_create_app`: Create a new app (requires `AD_APPS_DIR` for file creation).
+- `ad_remove_app`: Remove an app.
 
----
+### Services & Events
+- `ad_list_services`: List available services.
+- `ad_call_service`: Call a service (e.g., `light/turn_on`).
+- `ad_fire_event`: Fire a custom event in AppDaemon.
 
 ## Development
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/appdaemon-mcp.git
+cd appdaemon-mcp
+
+# Install dependencies and setup environment
+uv sync
+
 # Run tests
 uv run pytest
 
-# Lint
-uv run ruff check src/ tests/
-
-# Syntax check
-python -m py_compile src/appdaemon_mcp/server.py src/appdaemon_mcp/client.py
+# Lint and format
+uv run ruff check .
+uv run ruff format .
 ```
 
----
+## License
 
-## Architecture
-
-See [`implementation_plan.md`](./implementation_plan.md) for the full design document.
+MIT

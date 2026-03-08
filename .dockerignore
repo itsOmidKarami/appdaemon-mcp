@@ -1,0 +1,24 @@
+# Ignore virtual environments
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore IDE configs
+.vscode/
+.idea/
+
+# Ignore tests and local dev files
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+EXAMPLES.md
+examples/
