@@ -28,7 +28,7 @@ async def test_get_info_returns_data(client: AppDaemonClient):
             payload={"data": {"version": "4.4.2", "timezone": "UTC"}},
         )
         result = await client.get_info()
-    assert result["version"] == "4.4.2"
+    assert result.version == "4.4.2"
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +59,8 @@ async def test_get_state_namespace(client: AppDaemonClient):
             payload={"data": {"light.kitchen": {"state": "on"}}},
         )
         result = await client.get_state("default")
-    assert result["light.kitchen"]["state"] == "on"
+    assert isinstance(result, dict)
+    assert result["light.kitchen"].state == "on"
 
 
 # ---------------------------------------------------------------------------
@@ -74,7 +75,10 @@ async def test_get_state_entity(client: AppDaemonClient):
             payload={"data": {"state": "on", "attributes": {"brightness": 255}}},
         )
         result = await client.get_state("default", entity="light.kitchen")
-    assert result["state"] == "on"
+    from appdaemon_mcp.models import AppEntity
+
+    assert isinstance(result, AppEntity)
+    assert result.state == "on"
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +94,7 @@ async def test_get_logs_returns_list(client: AppDaemonClient):
         )
         result = await client.get_logs()
     assert isinstance(result, list)
-    assert result[0]["message"] == "Started"
+    assert result[0].message == "Started"
 
 
 # ---------------------------------------------------------------------------
@@ -100,8 +104,8 @@ async def test_get_logs_returns_list(client: AppDaemonClient):
 
 async def test_http_error_raises_appdaemon_error(client: AppDaemonClient):
     with aioresponses() as m:
-        m.get(f"{BASE_URL}/api/appdaemon", status=403, body="Forbidden")
-        with pytest.raises(AppDaemonError, match="403"):
+        m.get(f"{BASE_URL}/api/appdaemon", status=500, body="Error")
+        with pytest.raises(AppDaemonError, match="500"):
             await client.get_info()
 
 

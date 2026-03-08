@@ -2,18 +2,18 @@
 
 Tools:
     ad_get_info       — AppDaemon system information
-    ad_list_apps      — List all apps with their status
     ad_get_state      — State for an entire namespace
     ad_get_entity     — State for a single entity
     ad_get_logs       — Recent AppDaemon log entries
 """
 
 import logging
-from typing import Annotated, Any
-
-from pydantic import Field
+from typing import Annotated
 
 from mcp.server.fastmcp import Context
+from pydantic import Field
+
+from ..models import AppEntity, AppInfo, LogEntry
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-async def ad_get_info(ctx: Context) -> dict[str, Any]:
+async def ad_get_info(ctx: Context) -> AppInfo:
     """Return AppDaemon system information.
 
     Retrieves the AppDaemon version, timezone, latitude/longitude, and other
@@ -31,22 +31,6 @@ async def ad_get_info(ctx: Context) -> dict[str, Any]:
     """
     client = ctx.request_context.lifespan_context.client
     return await client.get_info()
-
-
-# ---------------------------------------------------------------------------
-# Tool: ad_list_apps
-# ---------------------------------------------------------------------------
-
-
-async def ad_list_apps(ctx: Context) -> dict[str, Any]:
-    """List all AppDaemon apps with their current status.
-
-    Queries ``GET /api/appdaemon/state/admin/`` which holds one entity per
-    app.  Each entity includes ``state`` (running/stopped/disabled) and the
-    app's configuration attributes.
-    """
-    client = ctx.request_context.lifespan_context.client
-    return await client.get_state(namespace="admin")
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +43,7 @@ async def ad_get_state(
     namespace: Annotated[
         str, Field(description="The AppDaemon namespace to query (e.g. 'default')")
     ] = "default",
-) -> dict[str, Any]:
+) -> dict[str, AppEntity]:
     """Return all entity state within an AppDaemon namespace.
 
     Args:
@@ -82,7 +66,7 @@ async def ad_get_entity(
     entity_id: Annotated[
         str, Field(description="The entity ID to look up (e.g. 'light.living_room')")
     ],
-) -> dict[str, Any]:
+) -> AppEntity:
     """Return the state of a single entity in an AppDaemon namespace.
 
     Args:
@@ -103,7 +87,7 @@ async def ad_get_logs(
     limit: Annotated[
         int, Field(description="Maximum number of log entries to return (0 = all)")
     ] = 100,
-) -> list[dict[str, Any]]:
+) -> list[LogEntry]:
     """Retrieve recent AppDaemon log entries.
 
     Args:
