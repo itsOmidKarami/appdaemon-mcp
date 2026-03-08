@@ -19,7 +19,7 @@ from contextlib import asynccontextmanager
 from mcp.server.fastmcp import FastMCP
 
 from .client import AppDaemonClient
-from .tools import apps, core
+from .tools import apps, core, services
 
 # ---------------------------------------------------------------------------
 # Logging & Server Configuration
@@ -82,6 +82,11 @@ mcp.tool(name="ad_disable_app")(apps.ad_disable_app)
 mcp.tool(name="ad_reload_apps")(apps.ad_reload_apps)
 mcp.tool(name="ad_create_app")(apps.ad_create_app)
 mcp.tool(name="ad_remove_app")(apps.ad_remove_app)
+
+# Register Services & Events Tools
+mcp.tool(name="ad_list_services")(services.ad_list_services)
+mcp.tool(name="ad_call_service")(services.ad_call_service)
+mcp.tool(name="ad_fire_event")(services.ad_fire_event)
 
 
 # ---------------------------------------------------------------------------
