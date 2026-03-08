@@ -32,8 +32,7 @@ async def ad_list_apps(ctx: Context) -> dict[str, AppEntity]:
 
 
 async def ad_get_app_info(
-    ctx: Context,
-    app: Annotated[str, Field(description="The name of the app to query")]
+    ctx: Context, app: Annotated[str, Field(description="The name of the app to query")]
 ) -> AppEntity:
     """Get detailed status and configuration for a single AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
@@ -41,8 +40,7 @@ async def ad_get_app_info(
 
 
 async def ad_start_app(
-    ctx: Context,
-    app: Annotated[str, Field(description="The name of the app to start")]
+    ctx: Context, app: Annotated[str, Field(description="The name of the app to start")]
 ) -> dict[str, Any]:
     """Start a stopped AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
@@ -50,8 +48,7 @@ async def ad_start_app(
 
 
 async def ad_stop_app(
-    ctx: Context,
-    app: Annotated[str, Field(description="The name of the app to stop")]
+    ctx: Context, app: Annotated[str, Field(description="The name of the app to stop")]
 ) -> dict[str, Any]:
     """Stop a running AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
@@ -59,8 +56,7 @@ async def ad_stop_app(
 
 
 async def ad_restart_app(
-    ctx: Context,
-    app: Annotated[str, Field(description="The name of the app to restart")]
+    ctx: Context, app: Annotated[str, Field(description="The name of the app to restart")]
 ) -> dict[str, Any]:
     """Restart an AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
@@ -68,8 +64,7 @@ async def ad_restart_app(
 
 
 async def ad_enable_app(
-    ctx: Context,
-    app: Annotated[str, Field(description="The name of the app to enable")]
+    ctx: Context, app: Annotated[str, Field(description="The name of the app to enable")]
 ) -> dict[str, Any]:
     """Enable a disabled AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
@@ -77,8 +72,7 @@ async def ad_enable_app(
 
 
 async def ad_disable_app(
-    ctx: Context,
-    app: Annotated[str, Field(description="The name of the app to disable")]
+    ctx: Context, app: Annotated[str, Field(description="The name of the app to disable")]
 ) -> dict[str, Any]:
     """Disable a running AppDaemon app."""
     client = ctx.request_context.lifespan_context.client
@@ -99,7 +93,7 @@ async def ad_create_app(
     app: Annotated[str, Field(description="The name of the app to create")],
     module: Annotated[str, Field(description="The Python module name (e.g. 'hello')")],
     class_name: Annotated[str, Field(description="The class name (e.g. 'HelloWorld')")],
-    args: Annotated[dict[str, Any], Field(description="Optional app arguments")] = None,
+    args: Annotated[dict[str, Any] | None, Field(description="Optional app arguments")] = None,
 ) -> dict[str, Any]:
     """Create a new AppDaemon app.
 
@@ -114,8 +108,7 @@ async def ad_create_app(
 
 
 async def ad_remove_app(
-    ctx: Context,
-    app: Annotated[str, Field(description="The name of the app to remove")]
+    ctx: Context, app: Annotated[str, Field(description="The name of the app to remove")]
 ) -> dict[str, Any]:
     """Remove an AppDaemon app."""
     client = ctx.request_context.lifespan_context.client

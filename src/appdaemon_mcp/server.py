@@ -19,7 +19,7 @@ from contextlib import asynccontextmanager
 from mcp.server.fastmcp import FastMCP
 
 from .client import AppDaemonClient
-from .tools import core, apps
+from .tools import apps, core
 
 # ---------------------------------------------------------------------------
 # Logging & Server Configuration
@@ -31,8 +31,6 @@ logging.basicConfig(
     stream=sys.stderr,
 )
 logger = logging.getLogger("appdaemon_mcp")
-
-mcp = FastMCP("AppDaemon")
 
 
 class LifespanContext:
@@ -60,8 +58,7 @@ async def lifespan(server: FastMCP) -> AsyncGenerator[LifespanContext, None]:
         await client.disconnect()
 
 
-# Configure the lifespan handler
-mcp.lifespan = lifespan
+mcp = FastMCP("AppDaemon", lifespan=lifespan)
 
 
 # ---------------------------------------------------------------------------

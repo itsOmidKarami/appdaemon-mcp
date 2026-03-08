@@ -59,6 +59,7 @@ async def test_get_state_namespace(client: AppDaemonClient):
             payload={"data": {"light.kitchen": {"state": "on"}}},
         )
         result = await client.get_state("default")
+    assert isinstance(result, dict)
     assert result["light.kitchen"].state == "on"
 
 
@@ -74,6 +75,9 @@ async def test_get_state_entity(client: AppDaemonClient):
             payload={"data": {"state": "on", "attributes": {"brightness": 255}}},
         )
         result = await client.get_state("default", entity="light.kitchen")
+    from appdaemon_mcp.models import AppEntity
+
+    assert isinstance(result, AppEntity)
     assert result.state == "on"
 
 
