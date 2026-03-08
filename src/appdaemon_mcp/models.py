@@ -20,7 +20,7 @@ class AppEntity(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    entity_id: str
+    entity_id: Optional[str] = None
     state: Any
     attributes: dict[str, Any] = Field(default_factory=dict)
     last_changed: Optional[str] = None

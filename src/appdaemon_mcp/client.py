@@ -4,12 +4,25 @@ import logging
 from typing import Any
 
 import aiohttp
+from .models import AppInfo, AppEntity, LogEntry
 
 logger = logging.getLogger(__name__)
 
 
 class AppDaemonError(Exception):
-    """Raised when AppDaemon returns an error response."""
+    """Base exception for AppDaemon client errors."""
+
+
+class ADAuthError(AppDaemonError):
+    """Raised when authentication fails (401/403)."""
+
+
+class ADConnectionError(AppDaemonError):
+    """Raised when the client cannot connect to AppDaemon."""
+
+
+class ADNotFoundError(AppDaemonError):
+    """Raised when a requested resource is not found (404)."""
 
 
 class AppDaemonClient:
@@ -75,8 +88,10 @@ class AppDaemonClient:
         """Make an HTTP request and return the parsed JSON body.
 
         Raises:
-            AppDaemonError: If the response status is not 2xx, or the payload
-                indicates an error.
+            ADAuthError: If 401 or 403 is returned.
+            ADNotFoundError: If 404 is returned.
+            AppDaemonError: If other 4xx or 5xx status is returned.
+            ADConnectionError: If a connection error occurs.
             RuntimeError: If the client session has not been opened yet.
         """
         if self._session is None or self._session.closed:
@@ -85,26 +100,41 @@ class AppDaemonClient:
         url = self._url(path)
         logger.debug("%s %s  params=%s  body=%s", method, url, params, json)
 
-        async with self._session.request(method, url, json=json, params=params) as resp:
-            if resp.status >= 400:
-                text = await resp.text()
-                raise AppDaemonError(
-                    f"AppDaemon API error {resp.status} for {method} {url}: {text}"
-                )
-            data = await resp.json(content_type=None)
+        try:
+            async with self._session.request(method, url, json=json, params=params) as resp:
+                if resp.status in (401, 403):
+                    text = await resp.text()
+                    raise ADAuthError(f"Authentication failed ({resp.status}): {text}")
+                if resp.status == 404:
+                    text = await resp.text()
+                    raise ADNotFoundError(f"Resource not found: {path}")
+                if resp.status >= 400:
+                    text = await resp.text()
+                    raise AppDaemonError(
+                        f"AppDaemon API error {resp.status} for {method} {url}: {text}"
+                    )
+                data = await resp.json(content_type=None)
+        except aiohttp.ClientConnectorError as exc:
+            raise ADConnectionError(f"Could not connect to AppDaemon at {url}") from exc
 
-        # AppDaemon typically wraps responses in {"data": ...}
-        if isinstance(data, dict) and "data" in data:
-            return data["data"]
+        # AppDaemon typically wraps responses in {"data": ...} or {"state": ...} or {"logs": ...}
+        if isinstance(data, dict):
+            if "data" in data:
+                return data["data"]
+            if "state" in data:
+                return data["state"]
+            if "logs" in data:
+                return data["logs"]
         return data
 
     # ------------------------------------------------------------------
     # System info
     # ------------------------------------------------------------------
 
-    async def get_info(self) -> dict[str, Any]:
+    async def get_info(self) -> AppInfo:
         """Return AppDaemon system overview (GET /api/appdaemon)."""
-        return await self._request("GET", "/api/appdaemon")
+        data = await self._request("GET", "/api/appdaemon")
+        return AppInfo.model_validate(data)
 
     # ------------------------------------------------------------------
     # State / namespaces
@@ -122,7 +152,7 @@ class AppDaemonClient:
         self,
         namespace: str = "default",
         entity: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> AppEntity | dict[str, AppEntity]:
         """Return state for an entire namespace or a single entity.
 
         Args:
@@ -131,9 +161,14 @@ class AppDaemonClient:
         """
         if entity:
             path = f"/api/appdaemon/state/{namespace}/{entity}"
+            data = await self._request("GET", path)
+            return AppEntity.model_validate(data)
         else:
             path = f"/api/appdaemon/state/{namespace}"
-        return await self._request("GET", path)
+            data = await self._request("GET", path)
+            if not isinstance(data, dict):
+                return {}
+            return {eid: AppEntity.model_validate(val) for eid, val in data.items()}
 
     # ------------------------------------------------------------------
     # Services
@@ -185,13 +220,15 @@ class AppDaemonClient:
     # Logs
     # ------------------------------------------------------------------
 
-    async def get_logs(self) -> list[dict[str, Any]]:
+    async def get_logs(self) -> list[LogEntry]:
         """Return recent AppDaemon logs (GET /api/appdaemon/logs)."""
         result = await self._request("GET", "/api/appdaemon/logs")
         if isinstance(result, list):
-            return result
+            return [LogEntry.model_validate(entry) for entry in result]
         # Wrap in list if a single dict is returned
-        return [result] if isinstance(result, dict) else []
+        if isinstance(result, dict):
+            return [LogEntry.model_validate(result)]
+        return []
 
     # ------------------------------------------------------------------
     # Custom app endpoints
