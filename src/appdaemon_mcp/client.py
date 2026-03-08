@@ -147,8 +147,7 @@ class AppDaemonClient:
                     )
                 data = await resp.json(content_type=None)
         except (aiohttp.ClientConnectorError, aiohttp.ClientOSError) as exc:
-            # Re-raise ADConnectionError if tenacity is exhausted, but tenacity will re-raise the last exception if reraise=True
-            raise exc
+            raise ADConnectionError(f"Could not connect to AppDaemon at {url}") from exc
 
         # AppDaemon typically wraps responses in {"data": ...} or {"state": ...} or {"logs": ...}
         if isinstance(data, dict):
