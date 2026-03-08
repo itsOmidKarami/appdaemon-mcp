@@ -1,6 +1,7 @@
 """Pydantic models for AppDaemon API."""
 
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -9,10 +10,10 @@ class AppInfo(BaseModel):
 
     version: str
     timezone: str
-    status: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    elevation: Optional[float] = None
+    status: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    elevation: float | None = None
 
 
 class AppEntity(BaseModel):
@@ -20,12 +21,12 @@ class AppEntity(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    entity_id: Optional[str] = None
+    entity_id: str | None = None
     state: Any
     attributes: dict[str, Any] = Field(default_factory=dict)
-    last_changed: Optional[str] = None
-    last_updated: Optional[str] = None
-    namespace: Optional[str] = None
+    last_changed: str | None = None
+    last_updated: str | None = None
+    namespace: str | None = None
 
 
 class LogEntry(BaseModel):
@@ -34,7 +35,7 @@ class LogEntry(BaseModel):
     ts: float | str
     type: str
     message: str
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class AppConfig(BaseModel):

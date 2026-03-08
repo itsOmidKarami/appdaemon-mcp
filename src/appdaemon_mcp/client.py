@@ -4,7 +4,8 @@ import logging
 from typing import Any
 
 import aiohttp
-from .models import AppInfo, AppEntity, LogEntry
+
+from .models import AppEntity, AppInfo, LogEntry
 
 logger = logging.getLogger(__name__)
 

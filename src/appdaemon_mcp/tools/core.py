@@ -10,10 +10,10 @@ Tools:
 import logging
 from typing import Annotated
 
+from mcp.server.fastmcp import Context
 from pydantic import Field
 
-from mcp.server.fastmcp import Context
-from ..models import AppInfo, AppEntity, LogEntry
+from ..models import AppEntity, AppInfo, LogEntry
 
 logger = logging.getLogger(__name__)
 

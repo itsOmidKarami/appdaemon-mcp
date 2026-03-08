@@ -1,17 +1,19 @@
 """Unit tests for app management tools."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from appdaemon_mcp.tools.apps import (
+    ad_create_app,
+    ad_disable_app,
+    ad_enable_app,
+    ad_get_app_info,
+    ad_reload_apps,
+    ad_remove_app,
+    ad_restart_app,
     ad_start_app,
     ad_stop_app,
-    ad_restart_app,
-    ad_enable_app,
-    ad_disable_app,
-    ad_reload_apps,
-    ad_create_app,
-    ad_remove_app,
-    ad_get_app_info,
 )
 
 
