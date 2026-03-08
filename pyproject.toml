@@ -57,6 +57,32 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
+[tool.semantic_release]
+version_variable = ["src/appdaemon_mcp/__init__.py:__version__"]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+upload_to_pypi = true
+upload_to_release = true
+build_command = "uv build"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "style", "refactor", "test"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.changelog.sections]
+feature = "Features"
+fix = "Bug Fixes"
+perf = "Performance Improvements"
+refactor = "Refactoring"
+docs = "Documentation"
+style = "Styles"
+test = "Tests"
+chore = "Maintenance"
+
 [dependency-groups]
 dev = [
     "aioresponses>=0.7.8",
@@ -67,4 +93,5 @@ dev = [
     "pytest-cov>=5.0.0",
     "pre-commit>=3.7.0",
     "commitizen>=3.20.0",
+    "python-semantic-release>=10.5.3",
 ]
